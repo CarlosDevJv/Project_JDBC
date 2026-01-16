@@ -6,12 +6,15 @@ import jdbc.model.entities.Department;
 import jdbc.model.entities.Seller;
 
 import java.util.Date;
+import java.util.List;
 
 public class Program {
     public static void main(String[] args) {
         SellerDao sellerDao = DaoFactory.createSellerDao();
-        Seller seller = sellerDao.findById(1);
-        System.out.println(seller);
+        List<Seller> sellers = sellerDao.findAll();
+        for(Seller seller : sellers){
+            System.out.println(seller);
+        };
 
     }
 }
