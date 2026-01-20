@@ -6,10 +6,7 @@ import jdbc.model.dao.SellerDao;
 import jdbc.model.entities.Department;
 import jdbc.model.entities.Seller;
 
-import java.sql.Connection;
-import java.sql.PreparedStatement;
-import java.sql.ResultSet;
-import java.sql.SQLException;
+import java.sql.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -24,16 +21,92 @@ public class SellerDaoJDBC implements SellerDao {
 
     @Override
     public void insert(Seller seller) {
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+
+        try {
+            preparedStatement = connection.prepareStatement("INSERT INTO seller (Name, Email, BirthDate, BaseSalary, DepartmentId) VALUES (?, ?, ?, ?, ?)", Statement.RETURN_GENERATED_KEYS);
+            preparedStatement.setString(1, seller.getName());
+            preparedStatement.setString(2, seller.getEmail());
+            preparedStatement.setDate(3, new Date(seller.getBirthDate().getTime()));
+            preparedStatement.setDouble(4, seller.getBaseSalary());
+            preparedStatement.setInt(5, seller.getDepartment().getId());
+
+            int rowsAffected = preparedStatement.executeUpdate();
+            if (rowsAffected > 0){
+                resultSet = preparedStatement.getGeneratedKeys();
+                while (resultSet.next()){
+                    int id = resultSet.getInt(1);
+                    seller.setId(id);
+                    System.out.println("INSERT DONE WITH SUCCESS! ID = " + id);
+                }
+            }
+            else {
+                throw new DB_Exception("Unexpected error! No rows affected");
+            }
+        } catch (SQLException e) {
+            throw new DB_Exception("ERROR! " + e.getMessage());
+        }
+        finally {
+            Db.closeResultSet(resultSet);
+            Db.closeStatement(preparedStatement);
+        }
 
     }
 
     @Override
     public void update(Seller seller) {
+        PreparedStatement preparedStatement = null;
+        ResultSet resultSet = null;
+
+        try {
+            preparedStatement = connection.prepareStatement("UPDATE seller SET Name = ?, Email = ?, BirthDate = ?, BaseSalary = ?, DepartmentId = ? WHERE Id = ?", Statement.RETURN_GENERATED_KEYS);
+            preparedStatement.setString(1, seller.getName());
+            preparedStatement.setString(2, seller.getEmail());
+            preparedStatement.setDate(3, new Date(seller.getBirthDate().getTime()));
+            preparedStatement.setDouble(4, seller.getBaseSalary());
+            preparedStatement.setInt(5, seller.getDepartment().getId());
+            preparedStatement.setInt(6, seller.getId());
+
+            int rowsAffected = preparedStatement.executeUpdate();
+
+            if (rowsAffected > 0){
+                resultSet = preparedStatement.getGeneratedKeys();
+                while (resultSet.next()){
+                    int id = resultSet.getInt(1);
+                    System.out.println("UPDATE DONE WITH SUCCESS! ID = " + id);
+                }
+            }
+        }
+        catch (SQLException sqlException){
+            throw new DB_Exception("ERROR! " + sqlException.getMessage());
+        }
+        finally {
+            Db.closeResultSet(resultSet);
+            Db.closeStatement(preparedStatement);
+        }
 
     }
 
     @Override
     public void Delete(Seller seller) {
+        PreparedStatement preparedStatement = null;
+
+        try {
+            preparedStatement = connection.prepareStatement("DELETE FROM seller WHERE Id = ?");
+            preparedStatement.setInt(1, seller.getId());
+            int n = preparedStatement.executeUpdate();
+
+            if (n > 0){
+                System.out.println("DELETE DONE WITH SUCCESS!");
+            }
+        }
+        catch (SQLException sqlException){
+            throw new DB_Exception("ERROR! " + sqlException.getMessage());
+        }
+        finally {
+            Db.closeStatement(preparedStatement);
+        }
 
     }
 
